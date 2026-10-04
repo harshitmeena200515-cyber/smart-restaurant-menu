@@ -7,6 +7,7 @@ import useOrderStore from '../store/orderStore';
 import MenuCard from '../components/customer/MenuCard';
 import ItemDetailModal from '../components/customer/ItemDetailModal';
 import CartDrawer from '../components/customer/CartDrawer';
+import mittiCover from '../assets/mitti-farms-main.jpg';
 
 const CustomerMenu = () => {
   const { restaurant, categories, menuItems } = useMenuStore();
@@ -144,36 +145,70 @@ const CustomerMenu = () => {
   // ─── Main Menu ──────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-surface-50 pb-24 max-w-2xl mx-auto relative shadow-xl overflow-x-hidden">
-      {/* Restaurant Header */}
-      <header className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white px-4 pt-6 pb-8 rounded-b-3xl shadow-lg relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.08),transparent_50%)]" />
-        <div className="relative flex flex-col items-center text-center">
-          {/* Table badge */}
-          {tableNumber && (
-            <div className="mb-3 px-4 py-1.5 bg-white/15 backdrop-blur-sm rounded-full text-sm font-bold flex items-center gap-1.5">
-              🪑 Table {tableNumber}
+      {/* Restaurant Header with Real Cover Photo */}
+      <header className="relative bg-surface-900 text-white rounded-b-3xl shadow-xl overflow-hidden mb-1">
+        {/* Real photo banner */}
+        <div className="relative h-44 sm:h-52 w-full overflow-hidden">
+          <img
+            src={mittiCover}
+            alt={restaurant.name}
+            className="w-full h-full object-cover brightness-[0.82] scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/50 to-black/30" />
+          
+          {/* Top floating row: Table badge and Info link */}
+          <div className="absolute top-3.5 left-4 right-4 flex items-center justify-between z-10">
+            {tableNumber ? (
+              <span className="px-3.5 py-1 bg-black/60 backdrop-blur-md text-white rounded-full text-xs font-bold border border-white/20 shadow-sm flex items-center gap-1.5">
+                🪑 Table {tableNumber}
+              </span>
+            ) : (
+              <span className="px-3 py-1 bg-black/50 backdrop-blur-md text-white/90 rounded-full text-[11px] font-semibold border border-white/10">
+                🌿 Mitti Farms Menu
+              </span>
+            )}
+            
+            <Link
+              to="/about"
+              className="px-3 py-1 bg-black/50 hover:bg-black/70 backdrop-blur-md rounded-full text-xs font-bold text-white transition-colors border border-white/20 flex items-center gap-1"
+            >
+              <Info size={13} /> About & Photos
+            </Link>
+          </div>
+
+          {/* Status Badge floating on image */}
+          <div className="absolute bottom-3 right-4 z-10">
+            <span className={`px-3 py-1 rounded-full text-xs font-extrabold shadow-md flex items-center gap-1.5 ${
+              restaurant.isOpen ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
+            }`}>
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              {restaurant.isOpen ? 'OPEN NOW' : 'CLOSED'}
+            </span>
+          </div>
+        </div>
+
+        {/* Content directly below banner */}
+        <div className="px-5 pt-3.5 pb-4 text-left bg-gradient-to-b from-surface-950 to-surface-900 border-t border-white/10">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🌿</span>
+                <h1 className="text-2xl font-black tracking-tight text-white">{restaurant.name}</h1>
+              </div>
+              <p className="text-emerald-300 text-xs font-semibold mt-0.5">{restaurant.subname || 'Chulha Bistro & Farmstay'}</p>
             </div>
-          )}
-
-          <div className="text-4xl mb-2 bg-white/15 p-3.5 rounded-2xl backdrop-blur-sm">{restaurant.logo}</div>
-          <h1 className="text-2xl font-extrabold tracking-tight">{restaurant.name}</h1>
-          <p className="text-brand-100 text-sm font-medium mt-0.5">{restaurant.tagline}</p>
-
-          <div className={`mt-3 px-3 py-1 rounded-full text-xs font-bold ${
-            restaurant.isOpen ? 'bg-emerald-500/90' : 'bg-red-500/90'
-          }`}>
-            {restaurant.isOpen ? '● OPEN NOW' : '● CLOSED'}
+            <span className="text-[11px] bg-white/10 text-brand-300 px-2.5 py-1 rounded-lg border border-white/10 font-medium shrink-0">
+              {restaurant.tagline}
+            </span>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-3 mt-4 text-[11px] text-brand-100/80">
-            <span className="flex items-center gap-1"><MapPin size={12} /> {restaurant.address}</span>
-            <span className="flex items-center gap-1"><Phone size={12} /> {restaurant.phone}</span>
-            <span className="flex items-center gap-1"><Clock size={12} /> {restaurant.hours.weekdays}</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-[11px] text-surface-300 border-t border-white/5 pt-2.5">
+            <span className="flex items-center gap-1"><MapPin size={12} className="text-brand-400" /> {restaurant.address}</span>
+            <a href={`tel:${restaurant.phone}`} className="flex items-center gap-1 hover:text-white transition-colors">
+              <Phone size={12} className="text-emerald-400" /> {restaurant.phone}
+            </a>
+            <span className="flex items-center gap-1"><Clock size={12} className="text-blue-400" /> {restaurant.hours.weekdays}</span>
           </div>
-
-          <Link to="/about" className="mt-3 text-xs text-white/70 hover:text-white underline flex items-center gap-1">
-            <Info size={12} /> More Info
-          </Link>
         </div>
       </header>
 
