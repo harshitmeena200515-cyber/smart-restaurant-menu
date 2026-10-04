@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mitti Farms - Table Barcode Standees (Print Ready)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #f5f5f4;
+      color: #1c1917;
+      padding: 24px;
+    }
+
+    .toolbar {
+      max-width: 900px;
+      margin: 0 auto 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      padding: 16px 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .btn {
+      background: #ea580c;
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: #c2410c;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 24px;
+      border: 2px solid #e7e5e4;
+      padding: 28px 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+      page-break-inside: avoid;
+    }
+
+    .header-logo {
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+
+    .brand-name {
+      font-size: 20px;
+      font-weight: 800;
+      color: #78350f;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      font-weight: 700;
+      color: #059669;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    .table-badge {
+      display: inline-block;
+      margin: 14px 0 12px;
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+      padding: 6px 18px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .qr-box {
+      background: #ffffff;
+      padding: 12px;
+      border-radius: 20px;
+      border: 3px solid #fed7aa;
+      margin: 6px 0 14px;
+    }
+
+    .qr-img {
+      width: 180px;
+      height: 180px;
+      display: block;
+    }
+
+    .instruction {
+      font-size: 13px;
+      font-weight: 700;
+      color: #292524;
+      margin-bottom: 4px;
+    }
+
+    .sub-inst {
+      font-size: 11px;
+      color: #78716c;
+      font-weight: 500;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+      }
+      .toolbar {
+        display: none !important;
+      }
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        max-width: 100%;
+      }
+      .card {
+        border: 1.5px solid #d6d3d1;
+        box-shadow: none;
+        break-inside: avoid;
+        margin-bottom: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <div>
+      <h2 style="font-size: 18px; font-weight: 800;">Mitti Farms Table QR Barcode Stands</h2>
+      <p style="font-size: 13px; color: #78716c;">Ready to print table stands for Table 01 to Table 12</p>
+    </div>
+    <button class="btn" onclick="window.print()">🖨️ Print All Cards</button>
+  </div>
+
+  <div class="grid">
+    <!-- Main Entrance Card -->
+    <div class="card">
+      <div class="header-logo">🌿</div>
+      <div class="brand-name">Mitti Farms</div>
+      <div class="brand-sub">Chulha Bistro & Farmstay</div>
+      <div class="table-badge" style="background:#dcfce7; color:#166534; border-color:#bbf7d0;">Main Entrance / Waiting Area</div>
+      <div class="qr-box">
+        <img class="qr-img" src="./qr-codes/mitti-farms-main-qr.png" alt="Main Menu QR">
+      </div>
+      <div class="instruction">📱 Scan to Browse Menu</div>
+      <div class="sub-inst">Live Availability · 100% Organic Recipes</div>
+    </div>
+
+    <!-- Table 01 to 12 Cards -->
+    <script>
+      for (let i = 1; i <= 12; i++) {
+        const id = String(i).padStart(2, '0');
+        document.write(`
+          <div class="card">
+            <div class="header-logo">🌿</div>
+            <div class="brand-name">Mitti Farms</div>
+            <div class="brand-sub">Chulha Bistro & Farmstay</div>
+            <div class="table-badge">🪑 Table ${id}</div>
+            <div class="qr-box">
+              <img class="qr-img" src="./qr-codes/table-${id}-qr.png" alt="Table ${id} QR">
+            </div>
+            <div class="instruction">📱 Scan to Order for Table ${id}</div>
+            <div class="sub-inst">Fast Kitchen Sync · Live Sold-Out Status</div>
+          </div>
+        `);
+      }
+    </script>
+  </div>
+
+</body>
+</html>
