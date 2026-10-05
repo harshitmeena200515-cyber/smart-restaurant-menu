@@ -105,13 +105,13 @@ const CustomerMenu = () => {
   // ─── Order Confirmation Screen ──────────────────────────────
   if (orderPlaced && currentOrder) {
     return (
-      <div className="min-h-screen bg-surface-50 max-w-2xl mx-auto shadow-xl flex items-center justify-center p-6">
-        <div className="text-center space-y-6 w-full max-w-sm">
+      <div className="min-h-screen bg-surface-50 w-full max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto shadow-xl flex items-center justify-center p-6">
+        <div className="text-center space-y-6 w-full max-w-md">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-emerald-100 rounded-full">
             <CheckCircle size={40} className="text-emerald-600" />
           </div>
-          <h1 className="text-2xl font-extrabold text-surface-900">Order Confirmed!</h1>
-          <div className="bg-white rounded-2xl p-5 border border-surface-100 shadow-sm text-left space-y-3">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-surface-900">Order Confirmed!</h1>
+          <div className="bg-white rounded-2xl p-6 border border-surface-100 shadow-sm text-left space-y-3.5">
             <div className="flex justify-between">
               <span className="text-surface-500 text-sm">Order ID</span>
               <span className="font-bold text-surface-900">{currentOrder.id}</span>
@@ -133,7 +133,7 @@ const CustomerMenu = () => {
           </div>
           <div className="space-y-3">
             <p className="text-sm text-surface-500">Your order has been sent to the kitchen.</p>
-            <button onClick={dismissOrder} className="btn-primary w-full py-3">
+            <button onClick={dismissOrder} className="btn-primary w-full py-3.5 font-bold">
               Browse Menu Again
             </button>
           </div>
@@ -144,11 +144,11 @@ const CustomerMenu = () => {
 
   // ─── Main Menu ──────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-surface-50 pb-24 max-w-2xl mx-auto relative shadow-xl overflow-x-hidden">
+    <div className="min-h-screen bg-surface-50 pb-24 w-full max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto relative shadow-xl overflow-x-hidden transition-all">
       {/* Restaurant Header with Real Cover Photo */}
-      <header className="relative bg-surface-900 text-white rounded-b-3xl shadow-xl overflow-hidden mb-1">
+      <header className="relative bg-surface-900 text-white rounded-b-3xl shadow-xl overflow-hidden mb-2">
         {/* Real photo banner */}
-        <div className="relative h-44 sm:h-52 w-full overflow-hidden">
+        <div className="relative h-48 sm:h-56 md:h-64 lg:h-72 w-full overflow-hidden">
           <img
             src={mittiCover}
             alt={restaurant.name}
@@ -157,28 +157,28 @@ const CustomerMenu = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/50 to-black/30" />
           
           {/* Top floating row: Table badge and Info link */}
-          <div className="absolute top-3.5 left-4 right-4 flex items-center justify-between z-10">
+          <div className="absolute top-3.5 left-4 right-4 md:left-6 md:right-6 md:top-5 flex items-center justify-between z-10">
             {tableNumber ? (
-              <span className="px-3.5 py-1 bg-black/60 backdrop-blur-md text-white rounded-full text-xs font-bold border border-white/20 shadow-sm flex items-center gap-1.5">
+              <span className="px-3.5 py-1.5 bg-black/60 backdrop-blur-md text-white rounded-full text-xs md:text-sm font-bold border border-white/20 shadow-sm flex items-center gap-1.5">
                 🪑 Table {tableNumber}
               </span>
             ) : (
-              <span className="px-3 py-1 bg-black/50 backdrop-blur-md text-white/90 rounded-full text-[11px] font-semibold border border-white/10">
+              <span className="px-3.5 py-1.5 bg-black/50 backdrop-blur-md text-white/90 rounded-full text-[11px] md:text-xs font-semibold border border-white/10">
                 🌿 Mitti Farms Menu
               </span>
             )}
             
             <Link
               to="/about"
-              className="px-3 py-1 bg-black/50 hover:bg-black/70 backdrop-blur-md rounded-full text-xs font-bold text-white transition-colors border border-white/20 flex items-center gap-1"
+              className="px-3.5 py-1.5 bg-black/50 hover:bg-black/70 backdrop-blur-md rounded-full text-xs md:text-sm font-bold text-white transition-colors border border-white/20 flex items-center gap-1.5 shadow-sm"
             >
-              <Info size={13} /> About & Photos
+              <Info size={14} /> About & Photos
             </Link>
           </div>
 
           {/* Status Badge floating on image */}
-          <div className="absolute bottom-3 right-4 z-10">
-            <span className={`px-3 py-1 rounded-full text-xs font-extrabold shadow-md flex items-center gap-1.5 ${
+          <div className="absolute bottom-3 right-4 md:bottom-4 md:right-6 z-10">
+            <span className={`px-3.5 py-1.5 rounded-full text-xs md:text-sm font-extrabold shadow-md flex items-center gap-1.5 ${
               restaurant.isOpen ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
             }`}>
               <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
@@ -188,40 +188,40 @@ const CustomerMenu = () => {
         </div>
 
         {/* Content directly below banner */}
-        <div className="px-5 pt-3.5 pb-4 text-left bg-gradient-to-b from-surface-950 to-surface-900 border-t border-white/10">
-          <div className="flex items-start justify-between gap-3">
+        <div className="px-5 md:px-8 pt-4 md:pt-5 pb-5 md:pb-6 text-left bg-gradient-to-b from-surface-950 to-surface-900 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🌿</span>
-                <h1 className="text-2xl font-black tracking-tight text-white">{restaurant.name}</h1>
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl md:text-3xl">🌿</span>
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white">{restaurant.name}</h1>
               </div>
-              <p className="text-emerald-300 text-xs font-semibold mt-0.5">{restaurant.subname || 'Chulha Bistro & Farmstay'}</p>
+              <p className="text-emerald-300 text-xs md:text-sm font-semibold mt-1">{restaurant.subname || 'Chulha Bistro & Farmstay'}</p>
             </div>
-            <span className="text-[11px] bg-white/10 text-brand-300 px-2.5 py-1 rounded-lg border border-white/10 font-medium shrink-0">
+            <span className="self-start sm:self-center text-xs md:text-sm bg-white/10 text-brand-300 px-3.5 py-1.5 rounded-xl border border-white/10 font-semibold shrink-0">
               {restaurant.tagline}
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-[11px] text-surface-300 border-t border-white/5 pt-2.5">
-            <span className="flex items-center gap-1"><MapPin size={12} className="text-brand-400" /> {restaurant.address}</span>
-            <a href={`tel:${restaurant.phone}`} className="flex items-center gap-1 hover:text-white transition-colors">
-              <Phone size={12} className="text-emerald-400" /> {restaurant.phone}
+          <div className="flex flex-wrap items-center gap-x-5 md:gap-x-8 gap-y-2 mt-4 text-[11px] md:text-xs text-surface-300 border-t border-white/10 pt-3">
+            <span className="flex items-center gap-1.5"><MapPin size={13} className="text-brand-400 shrink-0" /> {restaurant.address}</span>
+            <a href={`tel:${restaurant.phone}`} className="flex items-center gap-1.5 hover:text-white transition-colors">
+              <Phone size={13} className="text-emerald-400 shrink-0" /> {restaurant.phone}
             </a>
-            <span className="flex items-center gap-1"><Clock size={12} className="text-blue-400" /> {restaurant.hours.weekdays}</span>
+            <span className="flex items-center gap-1.5"><Clock size={13} className="text-blue-400 shrink-0" /> {restaurant.hours.weekdays}</span>
           </div>
         </div>
       </header>
 
       {/* Search Bar — sticky */}
-      <div className="sticky top-0 z-30 bg-surface-50/95 backdrop-blur-md px-4 py-2.5 shadow-sm border-b border-surface-100">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" size={17} />
+      <div className="sticky top-0 z-30 bg-surface-50/95 backdrop-blur-md px-4 md:px-8 py-2.5 md:py-3.5 shadow-sm border-b border-surface-100">
+        <div className="relative max-w-xl mx-auto sm:max-w-none">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400" size={18} />
           <input
             type="text"
-            placeholder="Search dishes..."
+            placeholder="Search delicious dishes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-surface-200 rounded-full py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent shadow-sm"
+            className="w-full bg-white border border-surface-200 rounded-full py-2.5 md:py-3 pl-11 pr-4 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent shadow-sm"
           />
         </div>
       </div>
@@ -230,14 +230,14 @@ const CustomerMenu = () => {
       {!searchQuery && (
         <div
           ref={categoryNavRef}
-          className="sticky top-[56px] z-20 bg-surface-50/95 backdrop-blur-md px-4 py-2.5 border-b border-surface-100 overflow-x-auto scrollbar-hide flex gap-2"
+          className="sticky top-[53px] md:top-[65px] z-20 bg-surface-50/95 backdrop-blur-md px-4 md:px-8 py-2.5 md:py-3 border-b border-surface-100 overflow-x-auto scrollbar-hide flex gap-2 md:gap-3 items-center"
         >
           <button
             onClick={() => scrollToCategory('all')}
-            className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-bold transition-colors ${
+            className={`whitespace-nowrap px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold transition-all shadow-sm ${
               activeCategory === 'all'
-                ? 'bg-brand-500 text-white shadow-sm'
-                : 'bg-white text-surface-600 border border-surface-200'
+                ? 'bg-brand-500 text-white shadow-brand-500/20'
+                : 'bg-white text-surface-600 hover:bg-surface-100 border border-surface-200'
             }`}
           >
             All
@@ -246,10 +246,10 @@ const CustomerMenu = () => {
             <button
               key={cat.id}
               onClick={() => scrollToCategory(cat.id)}
-              className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-bold transition-colors flex items-center gap-1 ${
+              className={`whitespace-nowrap px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold transition-all shadow-sm flex items-center gap-1.5 ${
                 activeCategory === cat.id
-                  ? 'bg-brand-500 text-white shadow-sm'
-                  : 'bg-white text-surface-600 border border-surface-200'
+                  ? 'bg-brand-500 text-white shadow-brand-500/20'
+                  : 'bg-white text-surface-600 hover:bg-surface-100 border border-surface-200'
               }`}
             >
               <span>{cat.icon}</span> {cat.name}
@@ -259,37 +259,37 @@ const CustomerMenu = () => {
       )}
 
       {/* Menu Content */}
-      <main className="px-4 py-5">
+      <main className="px-4 md:px-8 py-6 md:py-8">
         {searchQuery ? (
           /* Search results */
           <div>
-            <h2 className="text-lg font-bold text-surface-900 mb-3">
+            <h2 className="text-lg md:text-xl font-bold text-surface-900 mb-4">
               Results for "{searchQuery}"
             </h2>
             {filteredMenuItems.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
                 {filteredMenuItems.map((item) => (
                   <MenuCard key={item.id} item={item} onOpenDetail={setSelectedItem} />
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-surface-500">
-                <p className="text-lg mb-1">😕</p>
-                <p>No dishes found.</p>
+              <div className="text-center py-16 text-surface-500">
+                <p className="text-3xl mb-2">😕</p>
+                <p className="font-medium text-base">No dishes found matching "{searchQuery}".</p>
               </div>
             )}
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-8 md:space-y-12">
             {/* Featured */}
             {featuredItems.length > 0 && activeCategory === 'all' && (
               <section>
-                <h2 className="text-lg font-bold text-surface-900 mb-3 flex items-center gap-2">
+                <h2 className="text-lg md:text-xl font-bold text-surface-900 mb-3 md:mb-4 flex items-center gap-2">
                   <span className="text-brand-500">⭐</span> Popular Dishes
                 </h2>
-                <div className="flex overflow-x-auto gap-3 pb-3 scrollbar-hide snap-x">
+                <div className="flex overflow-x-auto gap-3 md:gap-5 pb-3 md:pb-4 scrollbar-hide snap-x">
                   {featuredItems.map((item) => (
-                    <div key={item.id} className="min-w-[220px] max-w-[260px] snap-start flex-shrink-0">
+                    <div key={item.id} className="min-w-[220px] max-w-[260px] md:min-w-[280px] md:max-w-[320px] snap-start flex-shrink-0">
                       <MenuCard item={item} onOpenDetail={setSelectedItem} />
                     </div>
                   ))}
@@ -306,12 +306,12 @@ const CustomerMenu = () => {
                   key={category.id}
                   id={category.id}
                   ref={(el) => (categoryRefs.current[category.id] = el)}
-                  className="scroll-mt-32"
+                  className="scroll-mt-36"
                 >
-                  <h2 className="text-xl font-bold text-surface-900 mb-3 pb-2 border-b border-surface-100 flex items-center gap-2">
+                  <h2 className="text-xl md:text-2xl font-bold text-surface-900 mb-3 md:mb-5 pb-2 border-b border-surface-100 flex items-center gap-2.5">
                     <span>{category.icon}</span> {category.name}
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
                     {items.map((item) => (
                       <MenuCard key={item.id} item={item} onOpenDetail={setSelectedItem} />
                     ))}
@@ -327,7 +327,7 @@ const CustomerMenu = () => {
       {cartCount > 0 && (
         <button
           onClick={() => setIsCartOpen(true)}
-          className="fixed bottom-5 right-4 z-40 bg-brand-600 hover:bg-brand-700 text-white shadow-xl rounded-2xl px-5 py-3.5 flex items-center gap-3 transition-transform hover:scale-[1.02] active:scale-95"
+          className="fixed bottom-5 right-4 md:bottom-8 md:right-8 z-40 bg-brand-600 hover:bg-brand-700 text-white shadow-xl rounded-2xl px-5 py-3.5 md:px-6 md:py-4 flex items-center gap-3 md:gap-3.5 transition-transform hover:scale-[1.03] active:scale-95"
           style={{ maxWidth: 'calc(100vw - 2rem)' }}
         >
           <div className="relative">
@@ -336,8 +336,8 @@ const CustomerMenu = () => {
               {cartCount}
             </span>
           </div>
-          <span className="font-bold text-sm">View Cart</span>
-          <span className="font-extrabold">₹{getCartTotal()}</span>
+          <span className="font-bold text-sm md:text-base">View Cart</span>
+          <span className="font-extrabold text-sm md:text-base">₹{getCartTotal()}</span>
         </button>
       )}
 
