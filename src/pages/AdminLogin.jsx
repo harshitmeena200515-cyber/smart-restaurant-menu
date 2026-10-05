@@ -124,10 +124,6 @@ const AdminLogin = () => {
           </div>
         </div>
 
-        {/* Demo credentials hint for convenience */}
-        <div className="mt-4 text-center text-xs text-surface-400 bg-white/5 py-2 px-3 rounded-xl border border-white/5">
-          <p>Admin Login: <span className="text-white font-mono font-bold">admin</span> | Password: <span className="text-white font-mono font-bold">MittiFarms@2026#Secure</span></p>
-        </div>
       </div>
     </div>
   );
