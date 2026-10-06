@@ -126,7 +126,7 @@ const AvailabilityManager = () => {
             }`}
           >
             <img 
-              src={getProductImageUrl(item.image, item.category)} 
+              src={getProductImageUrl(item.image, item.category, item.id, item.name)} 
               alt={item.name} 
               className={`w-14 h-14 rounded-xl object-cover mr-3 flex-shrink-0 ${!item.isAvailable ? 'opacity-50 grayscale' : ''}`} 
               onError={(e) => {

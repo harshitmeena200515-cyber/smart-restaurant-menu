@@ -18,7 +18,7 @@ export const useMenuStore = create(
       categories: [...defaultCategories],
       menuItems: defaultItems.map(item => ({
         ...item,
-        image: getProductImageUrl(item.image, item.category),
+        image: getProductImageUrl(item.image, item.category, item.id, item.name),
       })),
       customizationGroups: [...defaultGroups],
 
@@ -117,7 +117,7 @@ export const useMenuStore = create(
           categories: [...defaultCategories],
           menuItems: defaultItems.map(item => ({
             ...item,
-            image: getProductImageUrl(item.image, item.category),
+            image: getProductImageUrl(item.image, item.category, item.id, item.name),
           })),
           customizationGroups: [...defaultGroups],
         }),
@@ -193,13 +193,13 @@ export const useMenuStore = create(
       },
     }),
     {
-      name: 'smart-menu-storage-v2',
+      name: 'smart-menu-storage-v3',
       // Migration: automatically heal any old broken Unsplash URLs in localStorage
       onRehydrateStorage: () => (state) => {
         if (state && Array.isArray(state.menuItems)) {
           state.menuItems = state.menuItems.map((item) => ({
             ...item,
-            image: getProductImageUrl(item.image, item.category),
+            image: getProductImageUrl(item.image, item.category, item.id, item.name),
           }));
         }
       },

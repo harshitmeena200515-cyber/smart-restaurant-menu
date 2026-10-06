@@ -111,7 +111,7 @@ const ItemDetailModal = ({ item, isOpen, onClose }) => {
         <div className="relative aspect-video w-full bg-surface-100 flex-shrink-0">
           {!imageError ? (
             <img 
-              src={getProductImageUrl(item.image, item.category)} 
+              src={getProductImageUrl(item.image, item.category, item.id, item.name)} 
               alt={item.name} 
               className="w-full h-full object-cover"
               onError={() => setImageError(true)}

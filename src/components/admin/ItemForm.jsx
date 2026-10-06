@@ -36,7 +36,7 @@ const ItemForm = ({ item, isOpen, onClose }) => {
       setImageError('');
       setIsProcessingImage(false);
       if (item) {
-        const existingImg = item.image || getCategoryFallback(item.category);
+        const existingImg = getProductImageUrl(item.image, item.category, item.id, item.name);
         setFormData({
           ...item,
           price: String(item.price),
@@ -232,7 +232,7 @@ const ItemForm = ({ item, isOpen, onClose }) => {
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-semibold text-surface-800 flex items-center gap-1.5">
                     <ImageIcon size={16} className="text-brand-600" />
-                    Product Photo
+                    Product Photo (डिश की फोटो)
                   </label>
                   <div className="flex bg-surface-200 rounded-lg p-0.5 text-xs font-medium">
                     <button
@@ -242,7 +242,7 @@ const ItemForm = ({ item, isOpen, onClose }) => {
                         imageTab === 'upload' ? 'bg-white text-surface-900 shadow-sm font-bold' : 'text-surface-600 hover:text-surface-900'
                       }`}
                     >
-                      Upload File
+                      📱 गैलरी (Gallery)
                     </button>
                     <button
                       type="button"
@@ -251,7 +251,7 @@ const ItemForm = ({ item, isOpen, onClose }) => {
                         imageTab === 'url' ? 'bg-white text-surface-900 shadow-sm font-bold' : 'text-surface-600 hover:text-surface-900'
                       }`}
                     >
-                      Image URL
+                      Web URL
                     </button>
                   </div>
                 </div>
@@ -261,21 +261,26 @@ const ItemForm = ({ item, isOpen, onClose }) => {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/png, image/jpeg, image/webp"
+                      accept="image/*"
                       onChange={handleFileUpload}
                       className="hidden"
                       id="item-image-file-input"
                     />
                     <label
                       htmlFor="item-image-file-input"
-                      className="flex flex-col items-center justify-center p-3 border-2 border-dashed border-brand-300 hover:border-brand-500 rounded-xl bg-white cursor-pointer transition-all hover:bg-brand-50/40 text-center"
+                      className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-brand-400 hover:border-brand-600 rounded-xl bg-white cursor-pointer transition-all hover:bg-brand-50/50 text-center shadow-sm"
                     >
-                      <Upload size={22} className="text-brand-600 mb-1" />
-                      <span className="text-xs font-bold text-brand-700">
-                        {isProcessingImage ? 'Optimizing Image...' : 'Click to Upload Device Photo'}
+                      <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 mb-2">
+                        <Upload size={20} />
+                      </div>
+                      <span className="text-sm font-bold text-brand-700">
+                        {isProcessingImage ? '⏳ फोटो तैयार हो रही है...' : '📸 फ़ोन गैलरी से फोटो लगाएं'}
                       </span>
-                      <span className="text-[10px] text-surface-500 mt-0.5">
-                        JPG, PNG, WEBP (Auto-compressed)
+                      <span className="text-xs text-surface-600 font-medium mt-0.5">
+                        Click to select photo from Phone Gallery / Camera
+                      </span>
+                      <span className="text-[10px] text-surface-400 mt-1">
+                        Auto-compressed · Fast loading
                       </span>
                     </label>
                   </div>
@@ -289,7 +294,7 @@ const ItemForm = ({ item, isOpen, onClose }) => {
                         value={formData.image}
                         onChange={handleChange}
                         className="input-field pl-8 text-xs"
-                        placeholder="https://images.unsplash.com/..."
+                        placeholder="https://..."
                       />
                     </div>
                   </div>
@@ -303,26 +308,36 @@ const ItemForm = ({ item, isOpen, onClose }) => {
 
                 {/* Preview Thumbnail */}
                 {imagePreview && (
-                  <div className="mt-3 relative h-28 rounded-xl overflow-hidden border border-surface-200 bg-surface-100 shadow-inner group">
-                    <img
-                      src={imagePreview}
-                      alt="Product preview"
-                      className="w-full h-full object-cover"
-                      onError={() => {
-                        setImagePreview(getCategoryFallback(formData.category));
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <div className="mt-3">
+                    <div className="relative h-32 rounded-xl overflow-hidden border border-surface-200 bg-surface-100 shadow-inner group">
+                      <img
+                        src={imagePreview}
+                        alt="Product preview"
+                        className="w-full h-full object-cover"
+                        onError={() => {
+                          setImagePreview(getCategoryFallback(formData.category));
+                        }}
+                      />
+                      <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur text-white text-[10px] px-2 py-0.5 rounded font-medium flex items-center gap-1">
+                        <CheckCircle size={11} className="text-emerald-400" />
+                        {imagePreview.startsWith('data:image') ? '✅ गैलरी से चुनी गई फोटो' : 'फोटो तैयार है'}
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex-1 py-1.5 px-3 rounded-lg bg-surface-100 hover:bg-surface-200 text-surface-800 text-xs font-semibold transition-colors flex items-center justify-center gap-1"
+                      >
+                        🔄 गैलरी से बदलें
+                      </button>
                       <button
                         type="button"
                         onClick={handleRemoveImage}
-                        className="px-2.5 py-1 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700 shadow"
+                        className="py-1.5 px-3 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold transition-colors"
                       >
-                        Reset Photo
+                        हटाएं
                       </button>
-                    </div>
-                    <div className="absolute bottom-1 right-1 bg-black/60 backdrop-blur text-white text-[9px] px-1.5 py-0.5 rounded font-medium flex items-center gap-1">
-                      <CheckCircle size={10} className="text-emerald-400" /> Photo Ready
                     </div>
                   </div>
                 )}

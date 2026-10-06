@@ -11,6 +11,7 @@ import AvailabilityManager from '../components/admin/AvailabilityManager';
 import CategoryManager from '../components/admin/CategoryManager';
 import CustomizationManager from '../components/admin/CustomizationManager';
 import QRGenerator from '../components/admin/QRGenerator';
+import { getProductImageUrl } from '../utils/imageUtils';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -101,7 +102,11 @@ const AdminDashboard = () => {
                   {soldOutList.map(item => (
                     <div key={item.id} className="p-4 flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover bg-surface-100" />
+                        <img 
+                          src={getProductImageUrl(item.image, item.category, item.id, item.name)} 
+                          alt={item.name} 
+                          className="w-10 h-10 rounded-lg object-cover bg-surface-100" 
+                        />
                         <div>
                           <p className="font-medium text-surface-900">{item.name}</p>
                           <p className="text-sm text-surface-500">

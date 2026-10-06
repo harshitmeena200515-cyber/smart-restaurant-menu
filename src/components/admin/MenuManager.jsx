@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Search, Plus, Edit2, Trash2, Star, Filter } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Search, Plus, Edit2, Trash2, Star, Filter, Camera } from 'lucide-react';
 import useMenuStore from '../../store/menuStore';
 import ItemForm from './ItemForm';
-import { getProductImageUrl, getCategoryFallback } from '../../utils/imageUtils';
+import { getProductImageUrl, getCategoryFallback, processUploadedImage } from '../../utils/imageUtils';
 
 const MenuManager = () => {
   const menuItems = useMenuStore((s) => s.menuItems);
@@ -11,12 +11,34 @@ const MenuManager = () => {
   const toggleFeatured = useMenuStore((s) => s.toggleFeatured);
   const deleteItem = useMenuStore((s) => s.deleteItem);
   const setAvailability = useMenuStore((s) => s.setAvailability);
+  const updateItem = useMenuStore((s) => s.updateItem);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterAvailability, setFilterAvailability] = useState('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [quickUploadItemId, setQuickUploadItemId] = useState(null);
+  const quickFileInputRef = useRef(null);
+
+  const handleQuickGalleryUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !quickUploadItemId) return;
+    try {
+      const dataUrl = await processUploadedImage(file, 900, 700, 0.85);
+      updateItem(quickUploadItemId, { image: dataUrl });
+    } catch (err) {
+      alert(err.message || 'Failed to upload photo from gallery');
+    } finally {
+      setQuickUploadItemId(null);
+      if (quickFileInputRef.current) quickFileInputRef.current.value = '';
+    }
+  };
+
+  const triggerGalleryPicker = (itemId) => {
+    setQuickUploadItemId(itemId);
+    quickFileInputRef.current?.click();
+  };
 
   const handleEdit = (item) => {
     setEditingItem(item);
@@ -125,14 +147,23 @@ const MenuManager = () => {
               <tr key={item.id} className="hover:bg-surface-50 transition-colors">
                 <td className="p-4">
                   <div className="flex items-center gap-3">
-                    <img 
-                      src={getProductImageUrl(item.image, item.category)} 
-                      alt={item.name} 
-                      className="w-10 h-10 rounded-lg object-cover bg-surface-100 border border-surface-200"
-                      onError={(e) => {
-                        e.target.src = getCategoryFallback(item.category);
-                      }} 
-                    />
+                    <div
+                      className="relative group cursor-pointer shrink-0"
+                      onClick={() => triggerGalleryPicker(item.id)}
+                      title="फ़ोन गैलरी से फोटो बदलें (Click to choose photo from gallery)"
+                    >
+                      <img 
+                        src={getProductImageUrl(item.image, item.category, item.id, item.name)} 
+                        alt={item.name} 
+                        className="w-12 h-12 rounded-lg object-cover bg-surface-100 border border-surface-200"
+                        onError={(e) => {
+                          e.target.src = getCategoryFallback(item.category);
+                        }} 
+                      />
+                      <div className="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold">
+                        📷 गैलरी
+                      </div>
+                    </div>
                     <div className="flex items-center gap-2">
                       <span className={`inline-block w-3 h-3 border rounded-sm flex-shrink-0 ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
                         <span className={`block w-1.5 h-1.5 m-auto mt-[2px] ${item.isVeg ? 'bg-green-600 rounded-full' : 'bg-red-600'}`}
@@ -165,7 +196,15 @@ const MenuManager = () => {
                   </button>
                 </td>
                 <td className="p-4 text-right">
-                  <div className="flex justify-end gap-1">
+                  <div className="flex justify-end gap-1.5 items-center">
+                    <button
+                      onClick={() => triggerGalleryPicker(item.id)}
+                      className="px-2 py-1.5 text-xs text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors font-semibold flex items-center gap-1"
+                      title="फ़ोन गैलरी से फोटो लगाएं"
+                    >
+                      <Camera size={14} />
+                      <span>फोटो</span>
+                    </button>
                     <button onClick={() => handleEdit(item)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                       <Edit2 size={16} />
                     </button>
@@ -188,14 +227,23 @@ const MenuManager = () => {
         {filteredItems.map(item => (
           <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-surface-100">
             <div className="flex gap-3 mb-3">
-              <img 
-                src={getProductImageUrl(item.image, item.category)} 
-                alt={item.name} 
-                className="w-14 h-14 rounded-lg object-cover bg-surface-100 border border-surface-200 shrink-0"
-                onError={(e) => {
-                  e.target.src = getCategoryFallback(item.category);
-                }} 
-              />
+              <div
+                className="relative shrink-0 cursor-pointer"
+                onClick={() => triggerGalleryPicker(item.id)}
+                title="गैलरी से फोटो लगाएं"
+              >
+                <img 
+                  src={getProductImageUrl(item.image, item.category, item.id, item.name)} 
+                  alt={item.name} 
+                  className="w-16 h-16 rounded-xl object-cover bg-surface-100 border border-surface-200"
+                  onError={(e) => {
+                    e.target.src = getCategoryFallback(item.category);
+                  }} 
+                />
+                <span className="absolute -bottom-1 -right-1 bg-brand-600 text-white p-1 rounded-full shadow text-[10px] leading-none">
+                  📷
+                </span>
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-1.5">
@@ -212,7 +260,7 @@ const MenuManager = () => {
             </div>
             
             <div className="flex items-center justify-between pt-3 border-t border-surface-100">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <button 
                     onClick={() => toggleAvailability(item.id)}
@@ -229,11 +277,19 @@ const MenuManager = () => {
                 </button>
               </div>
               
-              <div className="flex gap-1">
-                <button onClick={() => handleEdit(item)} className="p-1.5 text-blue-600 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => triggerGalleryPicker(item.id)}
+                  className="px-2.5 py-1.5 text-xs text-brand-700 bg-brand-50 rounded-lg font-semibold flex items-center gap-1 border border-brand-200"
+                  title="फ़ोन गैलरी से फोटो लगाएं"
+                >
+                  <Camera size={13} />
+                  <span>फोटो</span>
+                </button>
+                <button onClick={() => handleEdit(item)} className="p-1.5 text-blue-600 bg-blue-50 rounded-lg" title="Edit">
                   <Edit2 size={16} />
                 </button>
-                <button onClick={() => handleDelete(item.id, item.name)} className="p-1.5 text-red-500 bg-red-50 rounded-lg">
+                <button onClick={() => handleDelete(item.id, item.name)} className="p-1.5 text-red-500 bg-red-50 rounded-lg" title="Delete">
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -244,6 +300,15 @@ const MenuManager = () => {
           <div className="p-8 text-center text-surface-500 bg-white rounded-xl border border-surface-100">No items found.</div>
         )}
       </div>
+
+      {/* Hidden file input for quick phone gallery photo update */}
+      <input
+        ref={quickFileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleQuickGalleryUpload}
+        className="hidden"
+      />
 
       <ItemForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} item={editingItem} />
     </div>

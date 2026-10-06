@@ -2,23 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { getProductImageUrl, getCategoryFallback } from '../../utils/imageUtils';
 
 const MenuCard = ({ item, onOpenDetail }) => {
-  const [imgSrc, setImgSrc] = useState(() => getProductImageUrl(item?.image, item?.category));
+  const [imgSrc, setImgSrc] = useState(() => getProductImageUrl(item?.image, item?.category, item?.id, item?.name));
   const [hasFailed, setHasFailed] = useState(false);
 
   useEffect(() => {
-    setImgSrc(getProductImageUrl(item?.image, item?.category));
+    setImgSrc(getProductImageUrl(item?.image, item?.category, item?.id, item?.name));
     setHasFailed(false);
-  }, [item?.image, item?.category]);
+  }, [item?.image, item?.category, item?.id, item?.name]);
 
   if (!item) return null;
 
   const handleImageError = () => {
     const fallback = getCategoryFallback(item.category);
     if (imgSrc !== fallback) {
-      // Try category fallback
       setImgSrc(fallback);
     } else {
-      // Both original and fallback failed
       setHasFailed(true);
     }
   };
