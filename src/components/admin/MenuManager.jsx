@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, Plus, Edit2, Trash2, Star, Filter } from 'lucide-react';
 import useMenuStore from '../../store/menuStore';
 import ItemForm from './ItemForm';
+import { getProductImageUrl, getCategoryFallback } from '../../utils/imageUtils';
 
 const MenuManager = () => {
   const menuItems = useMenuStore((s) => s.menuItems);
@@ -124,7 +125,14 @@ const MenuManager = () => {
               <tr key={item.id} className="hover:bg-surface-50 transition-colors">
                 <td className="p-4">
                   <div className="flex items-center gap-3">
-                    <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover bg-surface-100" />
+                    <img 
+                      src={getProductImageUrl(item.image, item.category)} 
+                      alt={item.name} 
+                      className="w-10 h-10 rounded-lg object-cover bg-surface-100 border border-surface-200"
+                      onError={(e) => {
+                        e.target.src = getCategoryFallback(item.category);
+                      }} 
+                    />
                     <div className="flex items-center gap-2">
                       <span className={`inline-block w-3 h-3 border rounded-sm flex-shrink-0 ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
                         <span className={`block w-1.5 h-1.5 m-auto mt-[2px] ${item.isVeg ? 'bg-green-600 rounded-full' : 'bg-red-600'}`}
@@ -180,7 +188,14 @@ const MenuManager = () => {
         {filteredItems.map(item => (
           <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-surface-100">
             <div className="flex gap-3 mb-3">
-              <img src={item.image} alt={item.name} className="w-14 h-14 rounded-lg object-cover bg-surface-100" />
+              <img 
+                src={getProductImageUrl(item.image, item.category)} 
+                alt={item.name} 
+                className="w-14 h-14 rounded-lg object-cover bg-surface-100 border border-surface-200 shrink-0"
+                onError={(e) => {
+                  e.target.src = getCategoryFallback(item.category);
+                }} 
+              />
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-1.5">

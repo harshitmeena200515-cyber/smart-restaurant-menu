@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Minus, Plus } from 'lucide-react';
 import useMenuStore from '../../store/menuStore';
 import useCartStore from '../../store/cartStore';
+import { getProductImageUrl, getCategoryFallback } from '../../utils/imageUtils';
 
 const ItemDetailModal = ({ item, isOpen, onClose }) => {
   const getCustomizationGroupsForItem = useMenuStore(state => state.getCustomizationGroupsForItem);
@@ -108,17 +109,22 @@ const ItemDetailModal = ({ item, isOpen, onClose }) => {
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4">
       <div className="w-full max-w-lg bg-white rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="relative aspect-video w-full bg-surface-100 flex-shrink-0">
-          {!imageError && item.image ? (
+          {!imageError ? (
             <img 
-              src={item.image} 
+              src={getProductImageUrl(item.image, item.category)} 
               alt={item.name} 
               className="w-full h-full object-cover"
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-brand-100 to-brand-300 flex items-center justify-center">
-              <span className="text-brand-500 font-medium">No Image</span>
-            </div>
+            <img
+              src={getCategoryFallback(item.category)}
+              alt={item.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
           )}
           
           <button 

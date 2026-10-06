@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Zap } from 'lucide-react';
 import useMenuStore from '../../store/menuStore';
+import { getProductImageUrl, getCategoryFallback } from '../../utils/imageUtils';
 
 const AvailabilityManager = () => {
   const menuItems = useMenuStore((s) => s.menuItems);
@@ -125,9 +126,12 @@ const AvailabilityManager = () => {
             }`}
           >
             <img 
-              src={item.image} 
+              src={getProductImageUrl(item.image, item.category)} 
               alt={item.name} 
               className={`w-14 h-14 rounded-xl object-cover mr-3 flex-shrink-0 ${!item.isAvailable ? 'opacity-50 grayscale' : ''}`} 
+              onError={(e) => {
+                e.target.src = getCategoryFallback(item.category);
+              }}
             />
             
             <div className="flex-1 min-w-0 mr-3">

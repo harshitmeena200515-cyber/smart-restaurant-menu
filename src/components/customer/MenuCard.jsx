@@ -1,9 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getProductImageUrl, getCategoryFallback } from '../../utils/imageUtils';
 
 const MenuCard = ({ item, onOpenDetail }) => {
-  const [imageError, setImageError] = useState(false);
+  const [imgSrc, setImgSrc] = useState(() => getProductImageUrl(item?.image, item?.category));
+  const [hasFailed, setHasFailed] = useState(false);
+
+  useEffect(() => {
+    setImgSrc(getProductImageUrl(item?.image, item?.category));
+    setHasFailed(false);
+  }, [item?.image, item?.category]);
 
   if (!item) return null;
+
+  const handleImageError = () => {
+    const fallback = getCategoryFallback(item.category);
+    if (imgSrc !== fallback) {
+      // Try category fallback
+      setImgSrc(fallback);
+    } else {
+      // Both original and fallback failed
+      setHasFailed(true);
+    }
+  };
 
   return (
     <div 
@@ -13,21 +31,23 @@ const MenuCard = ({ item, onOpenDetail }) => {
       onClick={() => item.isAvailable && onOpenDetail(item)}
     >
       <div className="relative aspect-[3/2] w-full bg-surface-100 overflow-hidden">
-        {!imageError && item.image ? (
+        {!hasFailed && imgSrc ? (
           <img 
-            src={item.image} 
+            src={imgSrc} 
             alt={item.name} 
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={() => setImageError(true)}
+            onError={handleImageError}
+            loading="lazy"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-brand-100 to-brand-300 flex items-center justify-center">
-            <span className="text-brand-500 font-medium">No Image</span>
+          <div className="w-full h-full bg-gradient-to-br from-brand-100 to-brand-300 flex flex-col items-center justify-center p-3 text-center">
+            <span className="text-2xl mb-1">🍽️</span>
+            <span className="text-brand-800 text-xs font-bold">{item.name}</span>
           </div>
         )}
         
         {item.isFeatured && (
-          <div className="absolute top-2 right-2 badge-featured bg-brand-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1">
+          <div className="absolute top-2 right-2 badge-featured bg-brand-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1 z-10">
             ⭐ Featured
           </div>
         )}

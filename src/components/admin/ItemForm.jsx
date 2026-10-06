@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Upload, Link as LinkIcon, Image as ImageIcon, CheckCircle, AlertCircle } from 'lucide-react';
 import useMenuStore from '../../store/menuStore';
+import { processUploadedImage, getProductImageUrl, getCategoryFallback } from '../../utils/imageUtils';
 
 const ItemForm = ({ item, isOpen, onClose }) => {
   const categories = useMenuStore((s) => s.categories);
@@ -8,11 +9,17 @@ const ItemForm = ({ item, isOpen, onClose }) => {
   const addItem = useMenuStore((s) => s.addItem);
   const updateItem = useMenuStore((s) => s.updateItem);
 
+  const fileInputRef = useRef(null);
+  const [imageTab, setImageTab] = useState('upload'); // 'upload' or 'url'
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [imageError, setImageError] = useState('');
+  const [imagePreview, setImagePreview] = useState('');
+
   const emptyForm = {
     name: '',
     description: '',
     price: '',
-    category: categories[0]?.id || '',
+    category: categories[0]?.id || 'starters',
     image: '',
     isVeg: true,
     isSpicy: false,
@@ -26,20 +33,71 @@ const ItemForm = ({ item, isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen) {
+      setImageError('');
+      setIsProcessingImage(false);
       if (item) {
-        setFormData({ ...item, price: String(item.price) });
+        const existingImg = item.image || getCategoryFallback(item.category);
+        setFormData({
+          ...item,
+          price: String(item.price),
+          image: existingImg,
+        });
+        setImagePreview(existingImg);
+        // If image is already a URL (http), default tab to 'url', else 'upload'
+        setImageTab(item.image?.startsWith('http') ? 'url' : 'upload');
       } else {
         setFormData(emptyForm);
+        setImagePreview('');
+        setImageTab('upload');
       }
     }
   }, [item, isOpen]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      };
+
+      // If category changes and no custom image uploaded yet, update default preview
+      if (name === 'category' && !item && !prev.image) {
+        setImagePreview(getCategoryFallback(value));
+      }
+
+      return next;
+    });
+
+    if (name === 'image') {
+      setImagePreview(value);
+      setImageError('');
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImageError('');
+    setIsProcessingImage(true);
+
+    try {
+      const dataUrl = await processUploadedImage(file, 800, 600, 0.85);
+      setFormData((prev) => ({ ...prev, image: dataUrl }));
+      setImagePreview(dataUrl);
+    } catch (err) {
+      setImageError(err.message || 'Failed to process image');
+    } finally {
+      setIsProcessingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData((prev) => ({ ...prev, image: '' }));
+    setImagePreview(getCategoryFallback(formData.category));
+    setImageError('');
   };
 
   const handleCustomizationToggle = (groupId) => {
@@ -58,8 +116,19 @@ const ItemForm = ({ item, isOpen, onClose }) => {
     e.preventDefault();
     if (!formData.name || !formData.price) return;
 
+    // Preserve existing image if no new image was explicitly selected
+    let finalImage = formData.image?.trim();
+    if (!finalImage) {
+      if (item && item.image) {
+        finalImage = item.image; // Preserve existing on price/description edits!
+      } else {
+        finalImage = getCategoryFallback(formData.category);
+      }
+    }
+
     const data = {
       ...formData,
+      image: finalImage,
       price: parseFloat(formData.price),
       spiceLevel: formData.isSpicy ? parseInt(formData.spiceLevel) || 1 : 0,
     };
@@ -75,14 +144,22 @@ const ItemForm = ({ item, isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl my-8">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl my-8 overflow-hidden border border-surface-200">
         {/* Header */}
-        <div className="flex justify-between items-center p-5 border-b border-surface-100">
-          <h2 className="text-xl font-bold text-surface-900">
-            {item ? 'Edit Item' : 'Add New Item'}
-          </h2>
-          <button onClick={onClose} className="p-2 text-surface-400 hover:text-surface-600 rounded-full hover:bg-surface-100">
+        <div className="flex justify-between items-center p-5 border-b border-surface-100 bg-surface-50">
+          <div>
+            <h2 className="text-xl font-bold text-surface-900">
+              {item ? 'Edit Menu Item' : 'Add New Item'}
+            </h2>
+            <p className="text-xs text-surface-500 mt-0.5">
+              {item ? 'Update pricing, details, or replace photo' : 'Add a fresh item to your live digital menu'}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-surface-400 hover:text-surface-700 rounded-full hover:bg-surface-200 transition-colors"
+          >
             <X size={22} />
           </button>
         </div>
@@ -92,78 +169,258 @@ const ItemForm = ({ item, isOpen, onClose }) => {
             {/* Left column */}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-surface-700 mb-1">Item Name *</label>
-                <input type="text" name="name" required value={formData.name} onChange={handleChange} className="input-field" placeholder="e.g., Paneer Tikka" />
+                <label className="block text-sm font-semibold text-surface-700 mb-1">Item Name *</label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="input-field"
+                  placeholder="e.g., Tandoori Roti"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-surface-700 mb-1">Price (₹) *</label>
-                <input type="number" name="price" required min="0" step="1" value={formData.price} onChange={handleChange} className="input-field" placeholder="280" />
+                <label className="block text-sm font-semibold text-surface-700 mb-1">Price (₹) *</label>
+                <input
+                  type="number"
+                  name="price"
+                  required
+                  min="0"
+                  step="1"
+                  value={formData.price}
+                  onChange={handleChange}
+                  className="input-field font-semibold text-brand-700"
+                  placeholder="35"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-surface-700 mb-1">Category</label>
-                <select name="category" value={formData.category} onChange={handleChange} className="input-field">
+                <label className="block text-sm font-semibold text-surface-700 mb-1">Category</label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="input-field"
+                >
                   {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                    <option key={c.id} value={c.id}>
+                      {c.icon} {c.name}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-surface-700 mb-1">Description</label>
-                <textarea name="description" rows="3" value={formData.description} onChange={handleChange} className="input-field" placeholder="Short description of the dish..." />
+                <label className="block text-sm font-semibold text-surface-700 mb-1">Description</label>
+                <textarea
+                  name="description"
+                  rows="3"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="input-field"
+                  placeholder="Short description of dish ingredients and taste..."
+                />
               </div>
             </div>
 
-            {/* Right column */}
+            {/* Right column: Image upload + badges */}
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-surface-700 mb-1">Image URL</label>
-                <input type="url" name="image" value={formData.image} onChange={handleChange} className="input-field" placeholder="https://..." />
-                {formData.image && (
-                  <div className="mt-2 h-28 rounded-xl overflow-hidden border border-surface-200 bg-surface-50">
-                    <img src={formData.image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+              {/* Image Manager */}
+              <div className="border border-surface-200 rounded-xl p-3.5 bg-surface-50/70">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-semibold text-surface-800 flex items-center gap-1.5">
+                    <ImageIcon size={16} className="text-brand-600" />
+                    Product Photo
+                  </label>
+                  <div className="flex bg-surface-200 rounded-lg p-0.5 text-xs font-medium">
+                    <button
+                      type="button"
+                      onClick={() => setImageTab('upload')}
+                      className={`px-2.5 py-1 rounded-md transition-all ${
+                        imageTab === 'upload' ? 'bg-white text-surface-900 shadow-sm font-bold' : 'text-surface-600 hover:text-surface-900'
+                      }`}
+                    >
+                      Upload File
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageTab('url')}
+                      className={`px-2.5 py-1 rounded-md transition-all ${
+                        imageTab === 'url' ? 'bg-white text-surface-900 shadow-sm font-bold' : 'text-surface-600 hover:text-surface-900'
+                      }`}
+                    >
+                      Image URL
+                    </button>
+                  </div>
+                </div>
+
+                {imageTab === 'upload' ? (
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/png, image/jpeg, image/webp"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="item-image-file-input"
+                    />
+                    <label
+                      htmlFor="item-image-file-input"
+                      className="flex flex-col items-center justify-center p-3 border-2 border-dashed border-brand-300 hover:border-brand-500 rounded-xl bg-white cursor-pointer transition-all hover:bg-brand-50/40 text-center"
+                    >
+                      <Upload size={22} className="text-brand-600 mb-1" />
+                      <span className="text-xs font-bold text-brand-700">
+                        {isProcessingImage ? 'Optimizing Image...' : 'Click to Upload Device Photo'}
+                      </span>
+                      <span className="text-[10px] text-surface-500 mt-0.5">
+                        JPG, PNG, WEBP (Auto-compressed)
+                      </span>
+                    </label>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="relative">
+                      <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
+                      <input
+                        type="url"
+                        name="image"
+                        value={formData.image}
+                        onChange={handleChange}
+                        className="input-field pl-8 text-xs"
+                        placeholder="https://images.unsplash.com/..."
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {imageError && (
+                  <div className="mt-2 text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle size={14} /> {imageError}
+                  </div>
+                )}
+
+                {/* Preview Thumbnail */}
+                {imagePreview && (
+                  <div className="mt-3 relative h-28 rounded-xl overflow-hidden border border-surface-200 bg-surface-100 shadow-inner group">
+                    <img
+                      src={imagePreview}
+                      alt="Product preview"
+                      className="w-full h-full object-cover"
+                      onError={() => {
+                        setImagePreview(getCategoryFallback(formData.category));
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="px-2.5 py-1 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700 shadow"
+                      >
+                        Reset Photo
+                      </button>
+                    </div>
+                    <div className="absolute bottom-1 right-1 bg-black/60 backdrop-blur text-white text-[9px] px-1.5 py-0.5 rounded font-medium flex items-center gap-1">
+                      <CheckCircle size={10} className="text-emerald-400" /> Photo Ready
+                    </div>
                   </div>
                 )}
               </div>
 
-              <div className="space-y-3 p-4 bg-surface-50 rounded-xl border border-surface-100">
+              {/* Dietary and Status Toggles */}
+              <div className="space-y-2.5 p-3.5 bg-surface-50 rounded-xl border border-surface-100">
                 <label className="flex items-center justify-between cursor-pointer">
-                  <span className="text-sm font-medium text-surface-700">Vegetarian</span>
-                  <div className={`relative w-11 h-6 rounded-full transition-colors ${formData.isVeg ? 'bg-green-500' : 'bg-surface-300'}`} onClick={() => setFormData((p) => ({ ...p, isVeg: !p.isVeg }))}>
-                    <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${formData.isVeg ? 'translate-x-6' : 'translate-x-1'}`} />
+                  <span className="text-xs font-semibold text-surface-700 flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-600 inline-block" /> Vegetarian
+                  </span>
+                  <div
+                    className={`relative w-10 h-5 rounded-full transition-colors ${
+                      formData.isVeg ? 'bg-green-600' : 'bg-surface-300'
+                    }`}
+                    onClick={() => setFormData((p) => ({ ...p, isVeg: !p.isVeg }))}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                        formData.isVeg ? 'translate-x-5' : 'translate-x-0.5'
+                      }`}
+                    />
                   </div>
                 </label>
 
                 <label className="flex items-center justify-between cursor-pointer">
-                  <span className="text-sm font-medium text-surface-700">Spicy</span>
-                  <div className={`relative w-11 h-6 rounded-full transition-colors ${formData.isSpicy ? 'bg-red-500' : 'bg-surface-300'}`} onClick={() => setFormData((p) => ({ ...p, isSpicy: !p.isSpicy }))}>
-                    <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${formData.isSpicy ? 'translate-x-6' : 'translate-x-1'}`} />
+                  <span className="text-xs font-semibold text-surface-700 flex items-center gap-1.5">
+                    🌶️ Spicy
+                  </span>
+                  <div
+                    className={`relative w-10 h-5 rounded-full transition-colors ${
+                      formData.isSpicy ? 'bg-red-500' : 'bg-surface-300'
+                    }`}
+                    onClick={() => setFormData((p) => ({ ...p, isSpicy: !p.isSpicy }))}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                        formData.isSpicy ? 'translate-x-5' : 'translate-x-0.5'
+                      }`}
+                    />
                   </div>
                 </label>
 
                 {formData.isSpicy && (
-                  <div className="pl-4 border-l-2 border-red-200">
-                    <label className="block text-xs font-medium text-surface-500 mb-1">Spice Level (1–3)</label>
-                    <input type="range" name="spiceLevel" min="1" max="3" value={formData.spiceLevel || 1} onChange={handleChange} className="w-full accent-red-500" />
-                    <div className="flex justify-between text-xs text-surface-400 mt-0.5">
-                      <span>Mild</span><span>Medium</span><span>Hot</span>
+                  <div className="pl-3 border-l-2 border-red-200">
+                    <label className="block text-[11px] font-medium text-surface-500 mb-1">
+                      Spice Level (1–3)
+                    </label>
+                    <input
+                      type="range"
+                      name="spiceLevel"
+                      min="1"
+                      max="3"
+                      value={formData.spiceLevel || 1}
+                      onChange={handleChange}
+                      className="w-full accent-red-500"
+                    />
+                    <div className="flex justify-between text-[10px] text-surface-400">
+                      <span>Mild</span>
+                      <span>Medium</span>
+                      <span>Hot</span>
                     </div>
                   </div>
                 )}
 
                 <label className="flex items-center justify-between cursor-pointer">
-                  <span className="text-sm font-medium text-surface-700">Featured / Popular</span>
-                  <div className={`relative w-11 h-6 rounded-full transition-colors ${formData.isFeatured ? 'bg-amber-500' : 'bg-surface-300'}`} onClick={() => setFormData((p) => ({ ...p, isFeatured: !p.isFeatured }))}>
-                    <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${formData.isFeatured ? 'translate-x-6' : 'translate-x-1'}`} />
+                  <span className="text-xs font-semibold text-surface-700 flex items-center gap-1.5">
+                    ⭐ Featured / Popular
+                  </span>
+                  <div
+                    className={`relative w-10 h-5 rounded-full transition-colors ${
+                      formData.isFeatured ? 'bg-amber-500' : 'bg-surface-300'
+                    }`}
+                    onClick={() => setFormData((p) => ({ ...p, isFeatured: !p.isFeatured }))}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                        formData.isFeatured ? 'translate-x-5' : 'translate-x-0.5'
+                      }`}
+                    />
                   </div>
                 </label>
 
                 <label className="flex items-center justify-between cursor-pointer">
-                  <span className="text-sm font-medium text-surface-700">Available</span>
-                  <div className={`relative w-11 h-6 rounded-full transition-colors ${formData.isAvailable ? 'bg-emerald-500' : 'bg-surface-300'}`} onClick={() => setFormData((p) => ({ ...p, isAvailable: !p.isAvailable }))}>
-                    <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${formData.isAvailable ? 'translate-x-6' : 'translate-x-1'}`} />
+                  <span className="text-xs font-semibold text-surface-700 flex items-center gap-1.5">
+                    ✅ Available in Kitchen
+                  </span>
+                  <div
+                    className={`relative w-10 h-5 rounded-full transition-colors ${
+                      formData.isAvailable ? 'bg-emerald-600' : 'bg-surface-300'
+                    }`}
+                    onClick={() => setFormData((p) => ({ ...p, isAvailable: !p.isAvailable }))}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                        formData.isAvailable ? 'translate-x-5' : 'translate-x-0.5'
+                      }`}
+                    />
                   </div>
                 </label>
               </div>
@@ -171,13 +428,20 @@ const ItemForm = ({ item, isOpen, onClose }) => {
           </div>
 
           {/* Customization groups */}
-          <div className="mt-5 border-t border-surface-100 pt-5">
-            <h3 className="text-sm font-semibold text-surface-800 mb-3">Customization Groups</h3>
+          <div className="mt-5 border-t border-surface-100 pt-4">
+            <h3 className="text-xs font-bold text-surface-700 uppercase tracking-wider mb-2.5">
+              Customization Options
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
               {customizationGroups.map((group) => (
-                <label key={group.id} className={`flex items-start gap-2.5 p-3 border rounded-xl cursor-pointer transition-colors ${
-                  (formData.customizationGroupIds || []).includes(group.id) ? 'border-brand-400 bg-brand-50' : 'border-surface-200 hover:bg-surface-50'
-                }`}>
+                <label
+                  key={group.id}
+                  className={`flex items-start gap-2.5 p-2.5 border rounded-xl cursor-pointer transition-colors ${
+                    (formData.customizationGroupIds || []).includes(group.id)
+                      ? 'border-brand-400 bg-brand-50/70'
+                      : 'border-surface-200 hover:bg-surface-50'
+                  }`}
+                >
                   <input
                     type="checkbox"
                     checked={(formData.customizationGroupIds || []).includes(group.id)}
@@ -185,9 +449,9 @@ const ItemForm = ({ item, isOpen, onClose }) => {
                     className="mt-0.5 w-4 h-4 text-brand-600 rounded focus:ring-brand-500"
                   />
                   <div>
-                    <div className="text-sm font-medium text-surface-900">{group.name}</div>
-                    <div className="text-xs text-surface-500">
-                      {group.required ? 'Required' : 'Optional'} · {group.options.length} options
+                    <div className="text-xs font-bold text-surface-900">{group.name}</div>
+                    <div className="text-[11px] text-surface-500">
+                      {group.required ? 'Required' : 'Optional'} · {group.options.length} choices
                     </div>
                   </div>
                 </label>
@@ -196,9 +460,17 @@ const ItemForm = ({ item, isOpen, onClose }) => {
           </div>
 
           {/* Actions */}
-          <div className="mt-6 flex justify-end gap-3">
-            <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-            <button type="submit" className="btn-primary">{item ? 'Save Changes' : 'Add Item'}</button>
+          <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-surface-100">
+            <button type="button" onClick={onClose} className="btn-secondary text-sm">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isProcessingImage}
+              className="btn-primary text-sm shadow-md"
+            >
+              {item ? 'Save Changes' : 'Add Item'}
+            </button>
           </div>
         </form>
       </div>
