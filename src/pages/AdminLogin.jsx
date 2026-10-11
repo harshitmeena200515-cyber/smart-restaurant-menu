@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useMenuStore from '../store/menuStore';
@@ -18,8 +18,7 @@ const AdminLogin = () => {
 
   // Redirect if already logged in
   if (isAuthenticated) {
-    navigate('/admin', { replace: true });
-    return null;
+    return <Navigate to="/admin" replace />;
   }
 
   const handleSubmit = (e) => {
