@@ -1,0 +1,7 @@
+{
+  "name": "Mitti Farms · Smart QR Restaurant Menu",
+  "description": "Mitti Farms & Chulha Bistro - Live QR Digital Menu. Farm fresh, organic, rural dining with instant availability & table ordering.",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
