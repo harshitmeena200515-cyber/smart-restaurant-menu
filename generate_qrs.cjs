@@ -13,17 +13,18 @@ async function generate() {
   console.log('Generating QR Barcodes for Mitti Farms...');
 
   // 1. General Menu Barcode
+  const mainUrl = `${baseUrl}#/`;
   const mainFile = path.join(outputDir, 'mitti-farms-main-qr.png');
-  await QRCode.toFile(mainFile, baseUrl, {
+  await QRCode.toFile(mainFile, mainUrl, {
     width: 600,
-    margin: 2,
+    margin: 4,
     color: {
       dark: '#1c1917',
       light: '#ffffff',
     },
     errorCorrectionLevel: 'H',
   });
-  console.log('Created:', mainFile);
+  console.log('Created Main Menu QR:', mainFile, '->', mainUrl);
 
   // 2. Tables 01 to 12
   for (let i = 1; i <= 12; i++) {
@@ -32,14 +33,14 @@ async function generate() {
     const tableFile = path.join(outputDir, `table-${tableId}-qr.png`);
     await QRCode.toFile(tableFile, tableUrl, {
       width: 600,
-      margin: 2,
+      margin: 4,
       color: {
         dark: '#1c1917',
         light: '#ffffff',
       },
       errorCorrectionLevel: 'H',
     });
-    console.log(`Created Table ${tableId}:`, tableFile);
+    console.log(`Created Table ${tableId} QR:`, tableFile, '->', tableUrl);
   }
 
   console.log('All QR barcodes generated successfully!');
