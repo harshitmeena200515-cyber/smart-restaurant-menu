@@ -19,6 +19,10 @@ import {
   generatePureQrSvg,
   downloadSvg,
   downloadPngFromSvg,
+  downloadStandCardPng,
+  downloadStandCardSvg,
+  downloadPureQrPng,
+  downloadPureQrSvg,
   verifyQrScannability,
   getProductionBaseUrl,
   PRODUCTION_LIVE_BASE,
@@ -53,7 +57,7 @@ const QRGenerator = () => {
     return verifyQrScannability(menuUrl, includeLogo);
   }, [menuUrl, includeLogo]);
 
-  // Generate the exact stand card SVG string (valid XML, no invalid entities)
+  // Generate the exact stand card SVG string (valid XML, explicit dimensions, no collapsing styles)
   const standCardSvg = useMemo(() => {
     return generateStandCardSvg({
       restaurant,
@@ -63,7 +67,7 @@ const QRGenerator = () => {
     });
   }, [restaurant, selectedTable, menuUrl, includeLogo]);
 
-  // Generate pure standalone QR SVG string
+  // Generate pure standalone QR SVG string (valid XML, explicit dimensions, no collapsing styles)
   const pureQrSvg = useMemo(() => {
     return generatePureQrSvg({
       menuUrl,
@@ -74,12 +78,18 @@ const QRGenerator = () => {
 
   const baseFileName = `mitti-farms-menu${selectedTable ? `-table-${selectedTable}` : ''}`;
 
-  // Download High-Resolution Table Stand Card as PNG
+  // Download High-Resolution Table Stand Card as PNG (1600×2200 HD)
   const handleDownloadStandPng = async () => {
     setIsExporting(true);
     try {
       const filename = `${baseFileName}-stand-card-hd.png`;
-      await downloadPngFromSvg(standCardSvg, filename, 1600, 2200);
+      await downloadStandCardPng({
+        restaurant,
+        tableNumber: selectedTable,
+        menuUrl,
+        includeLogo,
+        filename,
+      });
       toast.success(`✅ Downloaded High-Res Stand Card PNG (1600×2200)`);
     } catch (err) {
       console.error(err);
@@ -93,7 +103,13 @@ const QRGenerator = () => {
   const handleDownloadStandSvg = () => {
     try {
       const filename = `${baseFileName}-stand-card.svg`;
-      downloadSvg(standCardSvg, filename);
+      downloadStandCardSvg({
+        restaurant,
+        tableNumber: selectedTable,
+        menuUrl,
+        includeLogo,
+        filename,
+      });
       toast.success(`✅ Downloaded Scalable Vector Stand Card SVG`);
     } catch (err) {
       console.error(err);
@@ -101,12 +117,17 @@ const QRGenerator = () => {
     }
   };
 
-  // Download Pure Standalone QR as PNG
+  // Download Pure Standalone QR as PNG (1200×1200 HD)
   const handleDownloadPurePng = async () => {
     setIsExporting(true);
     try {
       const filename = `${baseFileName}-qr-only-hd.png`;
-      await downloadPngFromSvg(pureQrSvg, filename, 1200, 1200);
+      await downloadPureQrPng({
+        menuUrl,
+        restaurant,
+        includeLogo,
+        filename,
+      });
       toast.success(`✅ Downloaded Clean High-Res QR PNG (1200×1200)`);
     } catch (err) {
       console.error(err);
@@ -120,7 +141,12 @@ const QRGenerator = () => {
   const handleDownloadPureSvg = () => {
     try {
       const filename = `${baseFileName}-qr-only.svg`;
-      downloadSvg(pureQrSvg, filename);
+      downloadPureQrSvg({
+        menuUrl,
+        restaurant,
+        includeLogo,
+        filename,
+      });
       toast.success(`✅ Downloaded Scalable Vector QR SVG`);
     } catch (err) {
       console.error(err);
@@ -131,18 +157,24 @@ const QRGenerator = () => {
   // Quick download for individual table card in the batch grid
   const handleQuickDownloadTable = async (tableId, format) => {
     const tableUrl = `${normalizedBase}#/?table=${tableId}`;
-    const svgStr = generateStandCardSvg({
-      restaurant,
-      tableNumber: tableId,
-      menuUrl: tableUrl,
-      includeLogo,
-    });
     const filename = `mitti-farms-table-${tableId}.${format}`;
     if (format === 'svg') {
-      downloadSvg(svgStr, filename);
+      downloadStandCardSvg({
+        restaurant,
+        tableNumber: tableId,
+        menuUrl: tableUrl,
+        includeLogo,
+        filename,
+      });
       toast.success(`Table ${tableId} SVG downloaded`);
     } else {
-      await downloadPngFromSvg(svgStr, filename, 1600, 2200);
+      await downloadStandCardPng({
+        restaurant,
+        tableNumber: tableId,
+        menuUrl: tableUrl,
+        includeLogo,
+        filename,
+      });
       toast.success(`Table ${tableId} PNG downloaded`);
     }
   };
@@ -422,7 +454,7 @@ const QRGenerator = () => {
               <li>High-Resolution export at 1600&times;2200 pixels ensures sharp printing on A5, A6, and acrylic table stands.</li>
               <li>QR error correction level <span className="font-mono font-bold">Level H</span> (30% recovery) ensures reliable scanning under restaurant lighting.</li>
               <li>ISO quiet zone whitespace padding is preserved to prevent scanning distortion.</li>
-              <li>Clean XML validation ensures compatibility with mobile viewers, Adobe Illustrator, and CorelDRAW.</li>
+              <li>Explicit vector dimensions (800×1100 / 800×800) prevent collapsing in desktop viewers and design software.</li>
               <li>Destination URL correctly preserves table number parameters: <code className="bg-white/80 px-1 py-0.5 rounded font-mono text-[10px] break-all">{menuUrl}</code></li>
             </ul>
           </div>

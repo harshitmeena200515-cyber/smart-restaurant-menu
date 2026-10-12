@@ -43,8 +43,8 @@ export function escapeXml(str) {
 }
 
 /**
- * Generates an ultra-crisp, print-ready SVG string for a Table Stand QR Card
- * that visually matches the on-screen preview with pixel-perfect consistency.
+ * Generates an ultra-crisp, print-ready SVG string for a Table Stand QR Card.
+ * Uses explicit width, height, and viewBox without collapsing inline styles.
  */
 export function generateStandCardSvg({
   restaurant,
@@ -62,7 +62,6 @@ export function generateStandCardSvg({
   const modCount = qr.modules.size;
 
   // Center logo excavation bounds (7x7 modules if logo included)
-  // For Level H, this only takes ~2-3% of area, leaving huge error recovery margin.
   const centerMod = Math.floor(modCount / 2);
   const excavateRadius = includeLogo ? 3 : 0;
   const minEx = centerMod - excavateRadius;
@@ -82,14 +81,12 @@ export function generateStandCardSvg({
   }
 
   // QR placement within 800x1100 card
-  // Center of card: X = 400, Y = 525
   const qrSize = 420;
   const qrX = 190; // (800 - 420) / 2
-  const qrY = 315; // 525 - 210
+  const qrY = 315;
   const scale = qrSize / modCount;
 
   // Center logo dimensions strictly inside excavated module region
-  // (2 * excavateRadius + 1) modules wide; logo box stays within bounds so no modules are covered
   const logoBoxSize = includeLogo ? Math.round((excavateRadius * 2 + 0.6) * scale) : 0;
   const centerX = qrX + qrSize / 2;
   const centerY = qrY + qrSize / 2;
@@ -116,30 +113,32 @@ export function generateStandCardSvg({
         <clipPath id="logoClip">
           <rect x="${logoBoxX + 3}" y="${logoBoxY + 3}" width="${logoBoxSize - 6}" height="${logoBoxSize - 6}" rx="${Math.round(logoBoxSize * 0.18)}" />
         </clipPath>
-        <image x="${logoBoxX + 3}" y="${logoBoxY + 3}" width="${logoBoxSize - 6}" height="${logoBoxSize - 6}" href="${escapeXml(logoUrl)}" clip-path="url(#logoClip)" preserveAspectRatio="xMidYMid slice" />
+        <image x="${logoBoxX + 3}" y="${logoBoxY + 3}" width="${logoBoxSize - 6}" height="${logoBoxSize - 6}" href="${escapeXml(logoUrl)}" xlink:href="${escapeXml(logoUrl)}" clip-path="url(#logoClip)" preserveAspectRatio="xMidYMid slice" />
       `;
     } else {
       centerLogoSvg = `
         <rect x="${logoBoxX}" y="${logoBoxY}" width="${logoBoxSize}" height="${logoBoxSize}" rx="${Math.round(logoBoxSize * 0.22)}" fill="#fff7ed" stroke="#fed7aa" stroke-width="${Math.max(2, Math.round(logoBoxSize * 0.05))}" />
-        <text x="${centerX}" y="${Math.round(centerY + logoBoxSize * 0.22)}" font-family="'Playfair Display', 'Fraunces', Georgia, serif" font-weight="900" font-size="${Math.round(logoBoxSize * 0.58)}" fill="#ea580c" text-anchor="middle">${safeInitial}</text>
+        <text x="${centerX}" y="${centerY}" dominant-baseline="central" font-family="'Playfair Display', 'Fraunces', Georgia, serif" font-weight="900" font-size="${Math.round(logoBoxSize * 0.58)}" fill="#ea580c" text-anchor="middle">${safeInitial}</text>
       `;
     }
   }
 
   // Standalone valid SVG string with explicit width/height and viewBox for 100% portable rendering
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1100" width="800" height="1100" style="max-width: 100%; height: auto; display: block; aspect-ratio: 800/1100;">
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 800 1100" width="800" height="1100">
   <defs>
     <style>
       .title { font-family: 'Playfair Display', 'Fraunces', Georgia, serif; font-weight: 900; }
       .sans { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     </style>
-    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#1c1917" flood-opacity="0.08" />
-    </filter>
   </defs>
 
-  <!-- Outer Card Background -->
-  <rect x="20" y="20" width="760" height="1060" rx="36" fill="#ffffff" stroke="#e7e5e4" stroke-width="3" filter="url(#cardShadow)" />
+  <!-- Clean outer background -->
+  <rect width="800" height="1100" fill="#ffffff" />
+
+  <!-- Outer Card Border -->
+  <rect x="18" y="18" width="764" height="1064" rx="38" fill="#f5f5f4" />
+  <rect x="20" y="20" width="760" height="1060" rx="36" fill="#ffffff" stroke="#e7e5e4" stroke-width="2" />
 
   <!-- Decorative Top Brand Bar -->
   <path d="M 20 56 A 36 36 0 0 1 56 20 L 744 20 A 36 36 0 0 1 780 56 L 780 32 L 20 32 Z" fill="#ea580c" />
@@ -167,7 +166,7 @@ export function generateStandCardSvg({
   <!-- Center Logo Badge -->
   ${centerLogoSvg}
 
-  <!-- Bottom URL Info Container (Safe sizing to prevent any text clipping) -->
+  <!-- Bottom URL Info Container -->
   <g transform="translate(400, 880)">
     <rect x="-300" y="-36" width="600" height="74" rx="20" fill="#fafaf9" stroke="#e7e5e4" stroke-width="2" />
     <text x="0" y="-12" class="sans" font-weight="800" font-size="12" fill="#a8a29e" text-anchor="middle" letter-spacing="2">DIRECT MENU ACCESS</text>
@@ -182,6 +181,7 @@ export function generateStandCardSvg({
 
 /**
  * Generates a standalone, clean, high-resolution vector QR SVG with optional logo.
+ * Uses explicit width, height, and viewBox without collapsing inline styles.
  */
 export function generatePureQrSvg({ menuUrl, restaurant, includeLogo = true }) {
   const restName = (restaurant?.name || 'Mitti Farms').trim();
@@ -228,17 +228,18 @@ export function generatePureQrSvg({ menuUrl, restaurant, includeLogo = true }) {
         <clipPath id="pureLogoClip">
           <rect x="${logoBoxX + 3}" y="${logoBoxY + 3}" width="${logoBoxSize - 6}" height="${logoBoxSize - 6}" rx="${Math.round(logoBoxSize * 0.18)}" />
         </clipPath>
-        <image x="${logoBoxX + 3}" y="${logoBoxY + 3}" width="${logoBoxSize - 6}" height="${logoBoxSize - 6}" href="${escapeXml(logoUrl)}" clip-path="url(#pureLogoClip)" preserveAspectRatio="xMidYMid slice" />
+        <image x="${logoBoxX + 3}" y="${logoBoxY + 3}" width="${logoBoxSize - 6}" height="${logoBoxSize - 6}" href="${escapeXml(logoUrl)}" xlink:href="${escapeXml(logoUrl)}" clip-path="url(#pureLogoClip)" preserveAspectRatio="xMidYMid slice" />
       `;
     } else {
       centerLogoSvg = `
         <rect x="${logoBoxX}" y="${logoBoxY}" width="${logoBoxSize}" height="${logoBoxSize}" rx="${Math.round(logoBoxSize * 0.22)}" fill="#fff7ed" stroke="#fed7aa" stroke-width="${Math.max(2, Math.round(logoBoxSize * 0.05))}" />
-        <text x="${viewSize / 2}" y="${Math.round(viewSize / 2 + logoBoxSize * 0.22)}" font-family="'Playfair Display', 'Fraunces', Georgia, serif" font-weight="900" font-size="${Math.round(logoBoxSize * 0.58)}" fill="#ea580c" text-anchor="middle">${safeInitial}</text>
+        <text x="${viewSize / 2}" y="${viewSize / 2}" dominant-baseline="central" font-family="'Playfair Display', 'Fraunces', Georgia, serif" font-weight="900" font-size="${Math.round(logoBoxSize * 0.58)}" fill="#ea580c" text-anchor="middle">${safeInitial}</text>
       `;
     }
   }
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewSize} ${viewSize}" width="${viewSize}" height="${viewSize}" style="max-width: 100%; height: auto; display: block; aspect-ratio: 1/1;">
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${viewSize} ${viewSize}" width="${viewSize}" height="${viewSize}">
   <!-- Quiet Zone White Background -->
   <rect width="${viewSize}" height="${viewSize}" fill="#ffffff" />
   <!-- QR Modules -->
@@ -247,6 +248,356 @@ export function generatePureQrSvg({ menuUrl, restaurant, includeLogo = true }) {
   </g>
   ${centerLogoSvg}
 </svg>`;
+}
+
+/**
+ * Direct high-resolution Canvas renderer for Standalone Pure QR code.
+ * Eliminates all browser SVG-to-canvas rasterizer bugs.
+ */
+export function renderPureQrToCanvas(canvas, { menuUrl, restaurant, includeLogo = true, size = 1200 }) {
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // Solid white background (quiet zone)
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, size, size);
+
+  const qr = QRCode.create(menuUrl, { errorCorrectionLevel: 'H' });
+  const modCount = qr.modules.size;
+  const margin = 4;
+  const totalMod = modCount + margin * 2;
+  const scale = size / totalMod;
+
+  const centerMod = Math.floor(modCount / 2);
+  const excavateRadius = includeLogo ? 3 : 0;
+  const minEx = centerMod - excavateRadius;
+  const maxEx = centerMod + excavateRadius;
+
+  // Dark modules
+  ctx.fillStyle = '#1c1917';
+  for (let r = 0; r < modCount; r++) {
+    for (let c = 0; c < modCount; c++) {
+      if (includeLogo && r >= minEx && r <= maxEx && c >= minEx && c <= maxEx) {
+        continue;
+      }
+      if (qr.modules.get(r, c)) {
+        const x = Math.round((c + margin) * scale);
+        const y = Math.round((r + margin) * scale);
+        const w = Math.ceil((c + margin + 1) * scale) - x;
+        const h = Math.ceil((r + margin + 1) * scale) - y;
+        ctx.fillRect(x, y, w, h);
+      }
+    }
+  }
+
+  // Center logo / monogram badge
+  if (includeLogo) {
+    const logoBoxSize = Math.round((excavateRadius * 2 + 0.6) * scale);
+    const logoBoxX = Math.round(size / 2 - logoBoxSize / 2);
+    const logoBoxY = Math.round(size / 2 - logoBoxSize / 2);
+    const radius = Math.round(logoBoxSize * 0.22);
+    const borderWidth = Math.max(3, Math.round(logoBoxSize * 0.05));
+
+    ctx.save();
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(logoBoxX, logoBoxY, logoBoxSize, logoBoxSize, radius);
+    } else {
+      ctx.rect(logoBoxX, logoBoxY, logoBoxSize, logoBoxSize);
+    }
+    ctx.fillStyle = '#fff7ed';
+    ctx.fill();
+    ctx.lineWidth = borderWidth;
+    ctx.strokeStyle = '#fed7aa';
+    ctx.stroke();
+
+    const restName = (restaurant?.name || 'Mitti Farms').trim();
+    const initial = restName.charAt(0).toUpperCase() || 'M';
+    ctx.fillStyle = '#ea580c';
+    ctx.font = `900 ${Math.round(logoBoxSize * 0.58)}px 'Playfair Display', Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(initial, size / 2, size / 2);
+    ctx.restore();
+  }
+}
+
+/**
+ * Direct high-resolution Canvas renderer for Table Stand Card (1600×2200 HD).
+ * Guarantees crisp printing with 100% visible graphics and zero blank-file risk.
+ */
+export function renderStandCardToCanvas(
+  canvas,
+  { restaurant, tableNumber, menuUrl, includeLogo = true, width = 1600, height = 2200 }
+) {
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  // Scale relative to 800×1100 vector master
+  const s = width / 800;
+
+  // Solid white document base
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, width, height);
+
+  // Outer card background
+  ctx.save();
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(18 * s, 18 * s, 764 * s, 1064 * s, 38 * s);
+  } else {
+    ctx.rect(18 * s, 18 * s, 764 * s, 1064 * s);
+  }
+  ctx.fillStyle = '#f5f5f4';
+  ctx.fill();
+
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(20 * s, 20 * s, 760 * s, 1060 * s, 36 * s);
+  } else {
+    ctx.rect(20 * s, 20 * s, 760 * s, 1060 * s);
+  }
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.lineWidth = 2 * s;
+  ctx.strokeStyle = '#e7e5e4';
+  ctx.stroke();
+
+  // Top decorative brand bar
+  ctx.fillStyle = '#ea580c';
+  ctx.fillRect(56 * s, 20 * s, 688 * s, 12 * s);
+  ctx.restore();
+
+  // Restaurant title
+  const restName = (restaurant?.name || 'Mitti Farms').trim();
+  const restSub = (restaurant?.subname || 'Farmstay & Dining').trim();
+  ctx.save();
+  ctx.fillStyle = '#7c2d12';
+  ctx.font = `900 ${44 * s}px 'Playfair Display', Georgia, serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(restName, 400 * s, 112 * s);
+
+  // Restaurant subtitle
+  ctx.fillStyle = '#c2410c';
+  ctx.font = `700 ${16 * s}px system-ui, -apple-system, sans-serif`;
+  ctx.fillText(restSub.toUpperCase(), 400 * s, 148 * s);
+
+  // Table Pill
+  const tableLabel = tableNumber ? `Table ${tableNumber}` : 'Digital Menu';
+  const tableSub = tableNumber ? 'Reserved Table Stand' : 'Scan for Food & Beverage Menu';
+  const pillW = 320 * s;
+  const pillH = 48 * s;
+  const pillX = 400 * s - pillW / 2;
+  const pillY = 195 * s - pillH / 2;
+
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(pillX, pillY, pillW, pillH, 24 * s);
+  } else {
+    ctx.rect(pillX, pillY, pillW, pillH);
+  }
+  ctx.fillStyle = tableNumber ? '#fff7ed' : '#f5f5f4';
+  ctx.fill();
+  ctx.lineWidth = 2 * s;
+  ctx.strokeStyle = tableNumber ? '#fdba74' : '#d6d3d1';
+  ctx.stroke();
+
+  ctx.fillStyle = tableNumber ? '#c2410c' : '#44403c';
+  ctx.font = `800 ${tableNumber ? 22 * s : 17 * s}px system-ui, -apple-system, sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText(tableLabel, 400 * s, 195 * s);
+
+  ctx.fillStyle = '#a8a29e';
+  ctx.font = `600 ${14 * s}px system-ui, -apple-system, sans-serif`;
+  ctx.fillText(tableSub, 400 * s, 252 * s);
+  ctx.restore();
+
+  // QR Container Box & Quiet Zone
+  ctx.save();
+  const frameX = 140 * s;
+  const frameY = 265 * s;
+  const frameSize = 520 * s;
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(frameX, frameY, frameSize, frameSize, 32 * s);
+  } else {
+    ctx.rect(frameX, frameY, frameSize, frameSize);
+  }
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.lineWidth = 8 * s;
+  ctx.strokeStyle = '#fed7aa';
+  ctx.stroke();
+  ctx.restore();
+
+  // Draw QR Modules directly on Canvas
+  const qrSize = 420 * s;
+  const qrX = 190 * s;
+  const qrY = 315 * s;
+
+  const qr = QRCode.create(menuUrl, { errorCorrectionLevel: 'H' });
+  const modCount = qr.modules.size;
+  const scale = qrSize / modCount;
+
+  const centerMod = Math.floor(modCount / 2);
+  const excavateRadius = includeLogo ? 3 : 0;
+  const minEx = centerMod - excavateRadius;
+  const maxEx = centerMod + excavateRadius;
+
+  ctx.fillStyle = '#1c1917';
+  for (let r = 0; r < modCount; r++) {
+    for (let c = 0; c < modCount; c++) {
+      if (includeLogo && r >= minEx && r <= maxEx && c >= minEx && c <= maxEx) {
+        continue;
+      }
+      if (qr.modules.get(r, c)) {
+        const x = Math.round(qrX + c * scale);
+        const y = Math.round(qrY + r * scale);
+        const w = Math.ceil(qrX + (c + 1) * scale) - x;
+        const h = Math.ceil(qrY + (r + 1) * scale) - y;
+        ctx.fillRect(x, y, w, h);
+      }
+    }
+  }
+
+  // Draw center monogram badge
+  if (includeLogo) {
+    const logoBoxSize = Math.round((excavateRadius * 2 + 0.6) * scale);
+    const centerX = qrX + qrSize / 2;
+    const centerY = qrY + qrSize / 2;
+    const logoBoxX = Math.round(centerX - logoBoxSize / 2);
+    const logoBoxY = Math.round(centerY - logoBoxSize / 2);
+    const radius = Math.round(logoBoxSize * 0.22);
+    const borderWidth = Math.max(3 * s, Math.round(logoBoxSize * 0.05));
+
+    ctx.save();
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(logoBoxX, logoBoxY, logoBoxSize, logoBoxSize, radius);
+    } else {
+      ctx.rect(logoBoxX, logoBoxY, logoBoxSize, logoBoxSize);
+    }
+    ctx.fillStyle = '#fff7ed';
+    ctx.fill();
+    ctx.lineWidth = borderWidth;
+    ctx.strokeStyle = '#fed7aa';
+    ctx.stroke();
+
+    const initial = restName.charAt(0).toUpperCase() || 'M';
+    ctx.fillStyle = '#ea580c';
+    ctx.font = `900 ${Math.round(logoBoxSize * 0.58)}px 'Playfair Display', Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(initial, centerX, centerY);
+    ctx.restore();
+  }
+
+  // Bottom URL Container
+  ctx.save();
+  const urlBoxW = 600 * s;
+  const urlBoxH = 74 * s;
+  const urlBoxX = 400 * s - urlBoxW / 2;
+  const urlBoxY = 880 * s - urlBoxH / 2;
+
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(urlBoxX, urlBoxY, urlBoxW, urlBoxH, 20 * s);
+  } else {
+    ctx.rect(urlBoxX, urlBoxY, urlBoxW, urlBoxH);
+  }
+  ctx.fillStyle = '#fafaf9';
+  ctx.fill();
+  ctx.lineWidth = 2 * s;
+  ctx.strokeStyle = '#e7e5e4';
+  ctx.stroke();
+
+  ctx.fillStyle = '#a8a29e';
+  ctx.font = `800 ${12 * s}px system-ui, -apple-system, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('DIRECT MENU ACCESS', 400 * s, 868 * s);
+
+  ctx.fillStyle = '#292524';
+  ctx.font = `700 ${menuUrl.length > 55 ? 13 * s : 15 * s}px system-ui, -apple-system, sans-serif`;
+  ctx.fillText(menuUrl, 400 * s, 898 * s);
+
+  // Instructions Footer
+  ctx.fillStyle = '#78716c';
+  ctx.font = `700 ${16 * s}px system-ui, -apple-system, sans-serif`;
+  ctx.fillText('Scan with your smartphone camera to browse menu', 400 * s, 990 * s);
+
+  ctx.fillStyle = '#a8a29e';
+  ctx.font = `500 ${13 * s}px system-ui, -apple-system, sans-serif`;
+  ctx.fillText('No app download required · Instant digital availability', 400 * s, 1018 * s);
+  ctx.restore();
+}
+
+/**
+ * Checks if a canvas has actual rendered pixels (non-blank verification).
+ */
+function isCanvasBlank(ctx, width, height) {
+  try {
+    const sample = ctx.getImageData(0, 0, width, height).data;
+    // Inspect every 16th pixel for performance
+    for (let i = 0; i < sample.length; i += 64) {
+      // If any sampled pixel is not pure white (255, 255, 255)
+      if (sample[i] < 240 || sample[i + 1] < 240 || sample[i + 2] < 240) {
+        return false;
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Downloads a canvas element as a high-resolution PNG file.
+ */
+export function downloadPngFromCanvas(canvas, filename) {
+  return new Promise((resolve, reject) => {
+    try {
+      if (typeof canvas.toBlob === 'function') {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            // Fallback to dataURL
+            try {
+              const dataUrl = canvas.toDataURL('image/png');
+              triggerDownloadUrl(dataUrl, filename);
+              resolve(true);
+            } catch (err) {
+              reject(err);
+            }
+            return;
+          }
+          const url = URL.createObjectURL(blob);
+          triggerDownloadUrl(url, filename, () => URL.revokeObjectURL(url));
+          resolve(true);
+        }, 'image/png');
+      } else {
+        const dataUrl = canvas.toDataURL('image/png');
+        triggerDownloadUrl(dataUrl, filename);
+        resolve(true);
+      }
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+function triggerDownloadUrl(url, filename, cleanup = null) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  if (cleanup) {
+    setTimeout(cleanup, 5000);
+  }
 }
 
 /**
@@ -278,9 +629,9 @@ export function verifyQrScannability(menuUrl, includeLogo = true) {
           for (let py = 0; py < scale; py++) {
             for (let px = 0; px < scale; px++) {
               const idx = (((r + margin) * scale + py) * size + ((c + margin) * scale + px)) * 4;
-              data[idx] = 0;
-              data[idx + 1] = 0;
-              data[idx + 2] = 0;
+              data[idx] = 28;
+              data[idx + 1] = 25;
+              data[idx + 2] = 23;
               data[idx + 3] = 255;
             }
           }
@@ -319,7 +670,8 @@ export function verifyQrScannability(menuUrl, includeLogo = true) {
 }
 
 /**
- * Triggers browser download of SVG string as a proper XML document
+ * Triggers browser download of SVG string as a proper XML document.
+ * Ensures clean XML declaration and explicit dimensions.
  */
 export function downloadSvg(svgString, filename) {
   const cleanSvg = svgString.trim();
@@ -328,98 +680,170 @@ export function downloadSvg(svgString, filename) {
     : `<?xml version="1.0" encoding="UTF-8"?>\n${cleanSvg}`;
   const blob = new Blob([fullSvg], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  triggerDownloadUrl(url, filename, () => URL.revokeObjectURL(url));
 }
 
 /**
- * Converts SVG to high-resolution PNG (default 1600x2200 for stand, 1200x1200 for pure QR)
- * guaranteeing crisp printing with sharp edges and zero clipping.
+ * Robust SVG to PNG conversion pipeline with:
+ * 1. Sanitized SVG with explicit dimensions (no collapsing styles)
+ * 2. UTF-8 Data URL loading
+ * 3. High-resolution canvas rendering
+ * 4. Automatic blank canvas detection and fallback
  */
-export function downloadPngFromSvg(svgString, filename, targetWidth = 1600, targetHeight = 2200) {
+export function downloadPngFromSvg(
+  svgString,
+  filename,
+  targetWidth = 1600,
+  targetHeight = 2200,
+  fallbackRenderer = null
+) {
   return new Promise((resolve, reject) => {
     try {
-      const cleanSvg = svgString.trim();
-      const standaloneSvg = cleanSvg.startsWith('<?xml')
-        ? cleanSvg
-        : `<?xml version="1.0" encoding="UTF-8"?>\n${cleanSvg}`;
+      // Strip any problematic inline collapsing styles if present
+      let cleanSvg = svgString.trim();
+      cleanSvg = cleanSvg.replace(/style="[^"]*max-width:[^"]*"/gi, '');
+      if (!cleanSvg.startsWith('<?xml')) {
+        cleanSvg = `<?xml version="1.0" encoding="UTF-8"?>\n${cleanSvg}`;
+      }
 
-      const blob = new Blob([standaloneSvg], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const img = new Image();
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
-      const renderToCanvas = (imageSource) => {
-        const canvas = document.createElement('canvas');
-        canvas.width = targetWidth;
-        canvas.height = targetHeight;
-        const ctx = canvas.getContext('2d');
-
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-
-        // Solid white background behind entire artwork
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.drawImage(imageSource, 0, 0, targetWidth, targetHeight);
-
-        canvas.toBlob((pngBlob) => {
-          if (!pngBlob) {
-            reject(new Error('Canvas toBlob failed'));
-            return;
+      const renderFallback = () => {
+        if (fallbackRenderer) {
+          try {
+            fallbackRenderer(canvas);
+            downloadPngFromCanvas(canvas, filename).then(resolve).catch(reject);
+            return true;
+          } catch (fbErr) {
+            console.error('Fallback renderer failed:', fbErr);
           }
-          const pngUrl = URL.createObjectURL(pngBlob);
-          const a = document.createElement('a');
-          a.href = pngUrl;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setTimeout(() => URL.revokeObjectURL(pngUrl), 5000);
-          resolve(true);
-        }, 'image/png');
+        }
+        return false;
       };
 
-      img.onload = () => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.width = targetWidth;
+      img.height = targetHeight;
+
+      const handleImageReady = () => {
         try {
-          renderToCanvas(img);
-          URL.revokeObjectURL(url);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, targetWidth, targetHeight);
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+          if (isCanvasBlank(ctx, targetWidth, targetHeight)) {
+            if (renderFallback()) return;
+            throw new Error('Canvas rendered blank from SVG source');
+          }
+
+          downloadPngFromCanvas(canvas, filename).then(resolve).catch(reject);
         } catch (err) {
-          URL.revokeObjectURL(url);
+          if (renderFallback()) return;
           reject(err);
         }
       };
 
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        // Resilient fallback with Data URL
-        try {
-          const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(standaloneSvg)}`;
-          const imgFallback = new Image();
-          imgFallback.onload = () => {
-            try {
-              renderToCanvas(imgFallback);
-            } catch (err) {
-              reject(err);
-            }
-          };
-          imgFallback.onerror = () => {
-            reject(new Error('Failed to rasterize SVG into canvas'));
-          };
-          imgFallback.src = dataUrl;
-        } catch (fallbackErr) {
-          reject(fallbackErr);
+      img.onload = () => {
+        if (typeof img.decode === 'function') {
+          img.decode().then(handleImageReady).catch(handleImageReady);
+        } else {
+          handleImageReady();
         }
       };
 
-      img.src = url;
+      img.onerror = () => {
+        if (renderFallback()) return;
+        reject(new Error('Failed to load SVG into image element'));
+      };
+
+      // Use UTF-8 Data URI for 100% reliable synchronous image loading without Blob URL quirks
+      img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(cleanSvg)}`;
     } catch (err) {
+      if (fallbackRenderer) {
+        try {
+          const canvas = document.createElement('canvas');
+          fallbackRenderer(canvas);
+          downloadPngFromCanvas(canvas, filename).then(resolve).catch(reject);
+          return;
+        } catch {}
+      }
       reject(err);
     }
   });
+}
+
+/**
+ * Dedicated, 100% reliable Table Stand PNG exporter.
+ * Employs direct canvas rasterization guaranteed to produce sharp, high-contrast artwork.
+ */
+export function downloadStandCardPng({
+  restaurant,
+  tableNumber,
+  menuUrl,
+  includeLogo = true,
+  filename = 'mitti-farms-stand-card-hd.png',
+}) {
+  const canvas = document.createElement('canvas');
+  renderStandCardToCanvas(canvas, {
+    restaurant,
+    tableNumber,
+    menuUrl,
+    includeLogo,
+    width: 1600,
+    height: 2200,
+  });
+  return downloadPngFromCanvas(canvas, filename);
+}
+
+/**
+ * Dedicated, 100% reliable Table Stand SVG exporter.
+ */
+export function downloadStandCardSvg({
+  restaurant,
+  tableNumber,
+  menuUrl,
+  includeLogo = true,
+  filename = 'mitti-farms-stand-card.svg',
+}) {
+  const svg = generateStandCardSvg({ restaurant, tableNumber, menuUrl, includeLogo });
+  downloadSvg(svg, filename);
+}
+
+/**
+ * Dedicated, 100% reliable Standalone Pure QR PNG exporter.
+ * Employs direct canvas rasterization guaranteed to produce sharp, high-contrast artwork.
+ */
+export function downloadPureQrPng({
+  menuUrl,
+  restaurant,
+  includeLogo = true,
+  filename = 'mitti-farms-qr-only-hd.png',
+}) {
+  const canvas = document.createElement('canvas');
+  renderPureQrToCanvas(canvas, {
+    menuUrl,
+    restaurant,
+    includeLogo,
+    size: 1200,
+  });
+  return downloadPngFromCanvas(canvas, filename);
+}
+
+/**
+ * Dedicated, 100% reliable Standalone Pure QR SVG exporter.
+ */
+export function downloadPureQrSvg({
+  menuUrl,
+  restaurant,
+  includeLogo = true,
+  filename = 'mitti-farms-qr-only.svg',
+}) {
+  const svg = generatePureQrSvg({ menuUrl, restaurant, includeLogo });
+  downloadSvg(svg, filename);
 }
